@@ -20,21 +20,24 @@ class _SplashScreenState extends State<SplashScreen>{
       );
     }); // Timer
   }
-}
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: const Color.fromARGB(255, 127, 1, 133),
-    body: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(Icons.restaurant, color: Colors.white, size: 90,),
-        SizedBox(height: 16,),
-        Text("Recetas App", style: TextStyle(color: Colors.white, fontSize: 28),),
-        SizedBox(height: 24,),
-        CircularProgressIndicator(color: Colors.white,)
-      ],
-    ), // Column
-  ); // Scaffold
+  // AQUÍ ES DONDE VA EL MÉTODO BUILD, DENTRO DE LA CLASE STATE
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 127, 1, 133),
+      body: Center( // Agregué un Center para que la Column quede exactamente en medio
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.restaurant, color: Colors.white, size: 90,),
+            const SizedBox(height: 16,),
+            const Text("Recetas App", style: TextStyle(color: Colors.white, fontSize: 28),),
+            const SizedBox(height: 24,),
+            const CircularProgressIndicator(color: Colors.white,)
+          ],
+        ), // Column
+      ), // Center
+    ); // Scaffold
+  }
 }

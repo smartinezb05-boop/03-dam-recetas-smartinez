@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:recetas_app/models/receta.dart';
+import 'package:recetas_app/data/recetas_db.dart'; // Importamos la BD
 
 class DetalleRecetaScreen extends StatefulWidget {
   final Receta receta;
@@ -11,8 +12,16 @@ class DetalleRecetaScreen extends StatefulWidget {
 }
 
 class _DetalleRecetaScreenState extends State<DetalleRecetaScreen> {
-  // Controlador para el campo de texto de la reseña
   final TextEditingController _resenaController = TextEditingController();
+  late Receta _recetaActual;
+
+  @override
+  void initState() {
+    super.initState();
+    // Cargamos la receta en el estado y pre-llenamos la reseña si ya tenía una
+    _recetaActual = widget.receta;
+    _resenaController.text = _recetaActual.resena;
+  }
 
   @override
   void dispose() {
@@ -20,25 +29,34 @@ class _DetalleRecetaScreenState extends State<DetalleRecetaScreen> {
     super.dispose();
   }
 
-  void _enviarResena() {
-    final resena = _resenaController.text;
-    if (resena.isNotEmpty) {
-      // Aquí iría la lógica para guardar la reseña (ej. en una base de datos)
-      print("Reseña enviada: $resena"); 
+  // MÉTODO CONECTADO A LA BD
+  void _enviarResena() async {
+    final textoResena = _resenaController.text;
+    if (textoResena.isNotEmpty) {
+      // 1. Creamos una copia de la receta con la nueva reseña
+      final recetaActualizada = _recetaActual.copyWith(resena: textoResena);
+
+      // 2. La guardamos fisicamente en la base de datos local
+      await RecetasDb.instancia.insert(recetaActualizada);
+
+      // 3. Actualizamos la pantalla visualmente
+      setState(() {
+        _recetaActual = recetaActualizada;
+      });
       
+      // 4. Confirmación
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('¡Reseña guardada exitosamente!')),
+        const SnackBar(content: Text('¡Reseña guardada en la base de datos! 💾')),
       );
-      
-      _resenaController.clear();
-      // Opcional: Cerrar el teclado después de enviar
       FocusScope.of(context).unfocus();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final receta = widget.receta;
+    // Usamos _recetaActual en lugar de widget.receta para que la pantalla reaccione
+    final receta = _recetaActual;
+    
     return Scaffold(
       appBar: AppBar(title: const Text("Detalle de la receta")),
       body: ListView(
@@ -79,7 +97,7 @@ class _DetalleRecetaScreenState extends State<DetalleRecetaScreen> {
               child: Row(
                 children: [
                   const Icon(Icons.circle, size: 6, color: Colors.orange),
-                  const SizedBox(width: 8), // Corregido de height a width para el espacio horizontal
+                  const SizedBox(width: 8),
                   Expanded(child: Text(ingrediente)),
                 ],
               ),
@@ -112,13 +130,35 @@ class _DetalleRecetaScreenState extends State<DetalleRecetaScreen> {
                 ),
               ),
           
-          // --- NUEVA SECCIÓN DE RESEÑAS ---
           const SizedBox(height: 30),
           const Divider(),
           const SizedBox(height: 10),
-          const Text(
-            "Deja tu reseña:",
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+          
+          // Muestra la reseña actual si ya existe
+          if (receta.resena.isNotEmpty) ...[
+            const Text(
+              "Tu reseña actual:",
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.deepOrange),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: Text(
+                receta.resena,
+                style: const TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+
+          Text(
+            receta.resena.isEmpty ? "Deja tu reseña:" : "Actualizar reseña:",
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
           TextField(
@@ -138,15 +178,15 @@ class _DetalleRecetaScreenState extends State<DetalleRecetaScreen> {
             alignment: Alignment.centerRight,
             child: ElevatedButton.icon(
               onPressed: _enviarResena,
-              icon: const Icon(Icons.send),
-              label: const Text('Enviar Reseña'),
+              icon: const Icon(Icons.save),
+              label: Text(receta.resena.isEmpty ? 'Guardar Reseña' : 'Actualizar Reseña'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepOrange,
                 foregroundColor: Colors.white,
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 40),
         ],
       ),
     );

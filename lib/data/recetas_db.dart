@@ -1,7 +1,5 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-
-// Asegúrate de que esta ruta apunte correctamente a tu modelo
 import '../models/receta.dart'; 
 
 class RecetasDb {
@@ -11,7 +9,6 @@ class RecetasDb {
   static const _tabla = 'recetas';
   Database? _db;
 
-  // devuelve la bd abierta (la abre solo la primera vez). PdD: Singleton
   Future<Database> get _database async {
     _db ??= await _abrir();
     return _db!;
@@ -25,7 +22,7 @@ class RecetasDb {
       onCreate: (db, version) async {
         await db.execute('''
 CREATE TABLE $_tabla (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id INTEGER PRIMARY KEY,
   nombre TEXT NOT NULL,
   ingredientes TEXT NOT NULL,
   instrucciones TEXT NOT NULL,
@@ -36,27 +33,30 @@ CREATE TABLE $_tabla (
   imagenUrl TEXT NOT NULL,
   calificacion REAL NOT NULL,
   cocina TEXT NOT NULL,
-  dificultad TEXT NOT NULL
+  dificultad TEXT NOT NULL,
+  resena TEXT DEFAULT ''
 )
 ''');
       },
     );
   }
 
-  // guarda y devuelve el id
+  // Ahora si la receta ya existe, la sobreescribe (útil para actualizar reseñas)
   Future<int> insert(Receta receta) async {
     final db = await _database;
-    return db.insert(_tabla, receta.toMap());
+    return db.insert(
+      _tabla, 
+      receta.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
-  // lee todas las recetas de manera descendente
   Future<List<Receta>> obtenerTodas() async {
     final db = await _database;
     final filas = await db.query(_tabla, orderBy: 'id DESC');
     return filas.map(Receta.fromMap).toList();
   }
 
-  // modifica usando el id
   Future<int> actualizar(Receta receta) async {
     final db = await _database;
     return db.update(
@@ -67,7 +67,6 @@ CREATE TABLE $_tabla (
     );
   }
 
-  // elimina la receta con el id
   Future<int> eliminar(int id) async {
     final db = await _database;
     return db.delete(_tabla, where: 'id = ?', whereArgs: [id]);

@@ -1,7 +1,6 @@
-import 'dart:convert'; // Súper importante agregarlo hasta arriba para las listas
+import 'dart:convert';
 
 class Receta {
-  // 1. DECLARACIÓN DE VARIABLES
   final int id;
   final String nombre;
   final List<String> ingredientes;
@@ -14,8 +13,8 @@ class Receta {
   final double calificacion;
   final String cocina;
   final String dificultad;
+  final String resena; // NUEVO CAMPO
 
-  // 2. EL CONSTRUCTOR
   const Receta({
     required this.id,
     required this.nombre,
@@ -29,9 +28,9 @@ class Receta {
     required this.calificacion,
     required this.cocina,
     required this.dificultad,
+    this.resena = '', // Por defecto vacío
   });
 
-  // 3. EL FACTORY PARA LA API (Descargar de internet)
   factory Receta.fromJson(Map<String, dynamic> json) {
     return Receta(
       id: json['id'] ?? 0,
@@ -46,15 +45,14 @@ class Receta {
       calificacion: json['rating'] != null ? (json['rating'] as num).toDouble() : 0.0,
       cocina: json['cuisine'] ?? 'Sin especificar',
       dificultad: json['difficulty'] ?? 'Media',
+      resena: '', // Cuando viene de internet, no tiene reseña
     ); 
   }
 
-  // 4. NUEVO: MÉTODO PARA GUARDAR EN SQLITE
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'nombre': nombre,
-      // Convertimos las listas a texto para que SQLite las acepte
       'ingredientes': jsonEncode(ingredientes),
       'instrucciones': jsonEncode(instrucciones),
       'tiempoPreparacion': tiempoPreparacion,
@@ -65,15 +63,14 @@ class Receta {
       'calificacion': calificacion,
       'cocina': cocina,
       'dificultad': dificultad,
+      'resena': resena, // Guardamos la reseña
     };
   }
 
-  // 5. NUEVO: MÉTODO PARA LEER DE SQLITE
   factory Receta.fromMap(Map<String, dynamic> map) {
     return Receta(
       id: map['id'],
       nombre: map['nombre'],
-      // Decodificamos el texto de vuelta a listas normales de Dart
       ingredientes: List<String>.from(jsonDecode(map['ingredientes'])),
       instrucciones: List<String>.from(jsonDecode(map['instrucciones'])),
       tiempoPreparacion: map['tiempoPreparacion'],
@@ -84,8 +81,28 @@ class Receta {
       calificacion: map['calificacion'],
       cocina: map['cocina'],
       dificultad: map['dificultad'],
+      resena: map['resena'] ?? '', // Leemos la reseña
     );
   }
 
   int get tiempoTotal => tiempoPreparacion + tiempoCoccion;
+
+  // NUEVO: Método mágico para clonar la receta agregándole la reseña
+  Receta copyWith({String? resena}) {
+    return Receta(
+      id: id,
+      nombre: nombre,
+      ingredientes: ingredientes,
+      instrucciones: instrucciones,
+      tiempoPreparacion: tiempoPreparacion,
+      tiempoCoccion: tiempoCoccion,
+      porciones: porciones,
+      calorias: calorias,
+      imagenUrl: imagenUrl,
+      calificacion: calificacion,
+      cocina: cocina,
+      dificultad: dificultad,
+      resena: resena ?? this.resena,
+    );
+  }
 }

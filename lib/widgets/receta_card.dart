@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:recetas_app/models/receta.dart';
+// IMPORTANTE: Agregamos esta importación para poder navegar a la pantalla de detalle
+import 'package:recetas_app/screens/detalle_receta_screen.dart'; 
 
 class RecetaCard extends StatelessWidget {
   final Receta receta;
@@ -14,7 +16,14 @@ class RecetaCard extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: InkWell(
-        onTap: onTap,
+        onTap: onTap ?? () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DetalleRecetaScreen(receta: receta),
+            ),
+          );
+        },
         borderRadius: BorderRadius.circular(14),
         child: Padding(
           padding: const EdgeInsets.all(10),

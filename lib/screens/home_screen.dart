@@ -37,6 +37,28 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('RecetasApp'),
         backgroundColor: const Color.fromARGB(255, 216, 119, 84),
       ), // AppBar
+
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              controller: _buscadorController,
+              onChanged: _filtrarRecetas,
+              decoration: InputDecoration(
+                hintText: 'Buscar receta por nombre',
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ), // InputDecoration
+            ),
+          )
+        ]
+      )
       body: FutureBuilder<List<Receta>>(
         future: _futureRecetas,
         builder: (context, snapshot) {

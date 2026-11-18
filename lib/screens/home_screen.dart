@@ -11,12 +11,23 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final RecipeService _recipeService = RecipeService();
+  final TextEditingController _buscadorController = TextEditingController();
   late Future<List<Receta>> _futureRecetas;
+  List<Receta> _todasLasRecetas = [];
+  List<Receta> _recetasFiltradas = [];
 
   @override
   void initState() {
     super.initState();
     _futureRecetas = _recipeService.obtenerRecetas();
+  }
+
+  void _filtrarRecetas(String texto){
+    setState((){
+      _recetasFiltradas = _todasLasRecetas.where((receta) {
+        return receta.nombre.toLowerCase().contains(texto.toLowerCase());
+      }).toList();
+    });
   }
 
   @override

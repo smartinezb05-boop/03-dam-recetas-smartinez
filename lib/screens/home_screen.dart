@@ -19,11 +19,21 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _futureRecetas = _recipeService.obtenerRecetas();
+    _futureRecetas = _recipeService.obtenerRecetas().then((recetas) {
+      _todasLasRecetas = recetas;
+      _recetasFiltradas = recetas;
+      return recetas;
+    });
   }
 
-  void _filtrarRecetas(String texto){
-    setState((){
+  @override
+  void dispose() {
+    _buscadorController.dispose();
+    super.dispose();
+  }
+
+  void _filtrarRecetas(String texto) {
+    setState(() {
       _recetasFiltradas = _todasLasRecetas.where((receta) {
         return receta.nombre.toLowerCase().contains(texto.toLowerCase());
       }).toList();
@@ -36,8 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('RecetasApp'),
         backgroundColor: const Color.fromARGB(255, 216, 119, 84),
-      ), // AppBar
-
+      ),
       body: Column(
         children: [
           Padding(
@@ -54,30 +63,44 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
                 ),
-              ), // InputDecoration
+              ),
             ),
-          )
-        ]
-      )
-      body: FutureBuilder<List<Receta>>(
-        future: _futureRecetas,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          final recetas = snapshot.data!;
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: recetas.length,
-            itemBuilder: (context, index) {
-              return RecetaCard(receta: recetas[index]);
-            },
-          ); // ListView.builder
-        },
-      ), // FutureBuilder
-    ); // Scaffold
+          ),
+          Expanded(
+            child: FutureBuilder<List<Receta>>(
+              future: _futureRecetas,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                if(_todasLasRecetas.isEmpty){
+                  _todasLasRecetas = snapshot.data!;
+                  _recetasFiltradas = snapshot.data!;
+                }
+
+                if (_recetasFiltradas.isEmpty) {
+                  return const Center(child: Text('No se encontraron recetas'));
+                }
+
+
+                final recetas = _recetasFiltradas;
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: _recetasFiltradas.length,
+                  itemBuilder: (context, index) {
+                    return RecetaCard(receta: _recetasFiltradas[index]);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
